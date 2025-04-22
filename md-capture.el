@@ -1,7 +1,7 @@
 ;;; md-capture.el --- Simple Markdown capture system -*- lexical-binding: t; -*-
 
 ;; Author: Mike Hall and a Robot
-;; Version: 0.1
+;; Version: 0.2
 ;; Package-Requires: ((emacs "27.1"))
 ;; Keywords: markdown, convenience, capture
 ;; URL: https://github.com/you/md-capture
@@ -48,7 +48,7 @@
          (target (completing-read "Capture to: " targets nil t))
          (title (read-string "Post title: "))
          (date (format-time-string "%Y-%m-%d"))
-         (entry (format "## [%s] %s\n\n" date title)))
+         (entry (format "\n\n## [%s] %s\n\n" date title)))
     (with-current-buffer (find-file-noselect target)
       ;; Ensure first line is a level-1 title
       (goto-char (point-min))
