@@ -1,16 +1,16 @@
 ;;; md-capture.el --- Simple Markdown capture system -*- lexical-binding: t; -*-
 
-;; Author: Mike Hall and a Robot
-;; Version: 0.2
+;; Author: Mike
+;; Version: 0.3
 ;; Package-Requires: ((emacs "27.1"))
 ;; Keywords: markdown, convenience, capture
-;; URL: https://github.com/you/md-capture
+;; URL: https://github.com/yourusername/md-capture
 
 ;;; Commentary:
 ;;
 ;; A lightweight capture system for Markdown files, inspired by org-capture.
-;; Inserts date-stamped level-2 headings in a selected Markdown file.
-;; Files can be selected from a list or discovered from a directory.
+;; Creates a transient buffer for writing a timestamped post and saves it to a
+;; target Markdown file without showing the rest of the file during capture.
 
 ;;; Code:
 
@@ -38,56 +38,72 @@
             (define-key map (kbd "C-c C-k") #'md-capture-abort)
             map))
 
+(defun md-capture--extract-latest-heading (file)
+  "Extract the most recent level-2 heading from FILE."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (goto-char (point-min))
+    (if (re-search-forward "^## \[.*?\] \(.*\)$" nil t)
+        (match-string 1)
+      "No headings found")))
+
+(defun md-capture--annotate-targets (files)
+  "Annotate FILES with their most recent heading for display."
+  (mapcar (lambda (file)
+            (let ((preview (md-capture--extract-latest-heading file)))
+              (cons (format "%s  →  %s" (file-name-nondirectory file) preview) file)))
+          files))
+
 (defun md-capture ()
-  "Start a Markdown capture session."
+  "Start a Markdown capture session in an indirect buffer."
   (interactive)
   (let* ((targets (cond
                    (md-capture-targets md-capture-targets)
                    (md-capture-dir (directory-files md-capture-dir t "\\.md$"))
                    (t (user-error "No md-capture targets or directory defined."))))
-         (target (completing-read "Capture to: " targets nil t))
+         (annotated (md-capture--annotate-targets targets))
+         (choice (completing-read "Capture to: " (mapcar #'car annotated) nil t))
+         (target (cdr (assoc choice annotated)))
          (title (read-string "Post title: "))
          (date (format-time-string "%Y-%m-%d"))
-         (entry (format "\n\n## [%s] %s\n\n" date title)))
-    (with-current-buffer (find-file-noselect target)
-      ;; Ensure first line is a level-1 title
-      (goto-char (point-min))
-      (unless (looking-at "^# ")
-        (insert (format "# %s\n\n" (file-name-base target))))
-      (goto-char (point-min))
-      (forward-line 1)
-      (insert entry)
-      (save-buffer)
-      ;; Transient capture window
-      (let ((buf (current-buffer)))
-        (split-window-below -12)
-        (other-window 1)
-        (switch-to-buffer buf)
-        (goto-char (point-min))
-        (re-search-forward (regexp-quote entry))
-        (md-capture-mode 1)
-        (setq-local md-capture--destination target)))))
+         (entry-header (format "## [%s] %s\n\n" date title))
+         (capture-buffer (generate-new-buffer "*md-capture*")))
+    (switch-to-buffer capture-buffer)
+    (insert entry-header)
+    (markdown-mode)
+    (md-capture-mode 1)
+    (setq-local md-capture--destination target)
+    (message "Write your post. C-c C-c to save, C-c C-k to cancel.")))
 
 (defun md-capture-finalize ()
-  "Finalize and save the capture."
+  "Save the capture buffer's contents to the target file."
   (interactive)
-  (save-buffer)
-  (md-capture--cleanup)
-  (message "Capture saved."))
+  (let ((content (buffer-string))
+        (dest md-capture--destination))
+    (with-current-buffer (find-file-noselect dest)
+      (goto-char (point-min))
+      ;; Ensure first line is a level-1 title
+      (unless (looking-at "^# ")
+        (insert (format "# %s\n\n" (file-name-base dest))))
+      (goto-char (point-min))
+      (forward-line 1)
+      (insert content "\n")
+      (save-buffer))
+    (md-capture--cleanup)
+    (message "Capture saved to %s." md-capture--destination)))
 
 (defun md-capture-abort ()
-  "Abort the capture session."
+  "Cancel the current capture session."
   (interactive)
   (when (y-or-n-p "Abort this capture? ")
-    (revert-buffer :ignore-auto :noconfirm)
     (md-capture--cleanup)
     (message "Capture aborted.")))
 
 (defun md-capture--cleanup ()
-  "Clean up the capture window and buffer."
+  "Close and kill the capture buffer."
   (let ((buf (current-buffer)))
-    (delete-window)
-    (kill-buffer buf)))
+    (kill-buffer buf)
+    (delete-window)))
 
 (provide 'md-capture)
 ;;; md-capture.el ends here
