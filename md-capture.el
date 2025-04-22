@@ -1,10 +1,10 @@
 ;;; md-capture.el --- Simple Markdown capture system -*- lexical-binding: t; -*-
 
 ;; Author: Mike
-;; Version: 0.3
+;; Version: 0.4
 ;; Package-Requires: ((emacs "27.1"))
 ;; Keywords: markdown, convenience, capture
-;; URL: https://github.com/yourusername/md-capture
+;; URL: https://github.com/pdxmph/md-capture
 
 ;;; Commentary:
 ;;
@@ -32,7 +32,7 @@
 
 (define-minor-mode md-capture-mode
   "Minor mode for md-capture buffers."
-  :lighter " ✍️Capture"
+  :lighter " >> Capture"
   :keymap (let ((map (make-sparse-keymap)))
             (define-key map (kbd "C-c C-c") #'md-capture-finalize)
             (define-key map (kbd "C-c C-k") #'md-capture-abort)
@@ -48,8 +48,10 @@
          (target (completing-read "Capture to: " targets nil t))
          (title (read-string "Post title: "))
          (date (format-time-string "%Y-%m-%d"))
-         (entry-header (format "## [%s] %s\n\n" date title))
+         (entry-header (format "\n\n## [%s] %s\n\n" date title))
          (capture-buffer (generate-new-buffer "*md-capture*")))
+    (split-window-below -12)
+    (other-window 1)
     (switch-to-buffer capture-buffer)
     (insert entry-header)
     (markdown-mode)
@@ -68,7 +70,9 @@
       (unless (looking-at "^# ")
         (insert (format "# %s\n\n" (file-name-base dest))))
       (goto-char (point-min))
-      (forward-line 1)
+      (if (re-search-forward "^## " nil t)
+          (beginning-of-line)
+        (goto-char (point-max)))
       (insert content "\n")
       (save-buffer))
     (md-capture--cleanup)
