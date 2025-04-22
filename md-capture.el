@@ -38,22 +38,6 @@
             (define-key map (kbd "C-c C-k") #'md-capture-abort)
             map))
 
-(defun md-capture--extract-latest-heading (file)
-  "Extract the most recent level-2 heading from FILE."
-  (with-temp-buffer
-    (insert-file-contents file)
-    (goto-char (point-min))
-    (if (re-search-forward "^## \[.*?\] \(.*\)$" nil t)
-        (match-string 1)
-      "No headings found")))
-
-(defun md-capture--annotate-targets (files)
-  "Annotate FILES with their most recent heading for display."
-  (mapcar (lambda (file)
-            (let ((preview (md-capture--extract-latest-heading file)))
-              (cons (format "%s  →  %s" (file-name-nondirectory file) preview) file)))
-          files))
-
 (defun md-capture ()
   "Start a Markdown capture session in an indirect buffer."
   (interactive)
@@ -61,9 +45,7 @@
                    (md-capture-targets md-capture-targets)
                    (md-capture-dir (directory-files md-capture-dir t "\\.md$"))
                    (t (user-error "No md-capture targets or directory defined."))))
-         (annotated (md-capture--annotate-targets targets))
-         (choice (completing-read "Capture to: " (mapcar #'car annotated) nil t))
-         (target (cdr (assoc choice annotated)))
+         (target (completing-read "Capture to: " targets nil t))
          (title (read-string "Post title: "))
          (date (format-time-string "%Y-%m-%d"))
          (entry-header (format "## [%s] %s\n\n" date title))
