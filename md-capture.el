@@ -1,16 +1,16 @@
 ;;; md-capture.el --- Simple Markdown capture system -*- lexical-binding: t; -*-
 
-;; Author: Mike
-;; Version: 0.5
+;; Author: Mike Hall
+;; Version: 0.6
 ;; Package-Requires: ((emacs "27.1"))
 ;; Keywords: markdown, convenience, capture
 ;; URL: https://github.com/pdxmph/md-capture
 
 ;;; Commentary:
 ;;
-;; A lightweight capture system for Markdown files, inspired by org-capture.
+;; A lightweight capture tool for Markdown files, inspired by org-capture.
 ;; Creates a transient buffer for writing a timestamped post and saves it to a
-;; target Markdown file without showing the rest of the file during capture.
+;; target Markdown file.
 
 ;;; Code:
 
