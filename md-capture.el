@@ -27,7 +27,7 @@
   "Directory from which to use all *.md files as capture targets."
   :type 'directory)
 
-(defvar-local md-capture--destination nil
+(defvar md-capture--destination nil
   "Internal variable to store the destination file during a capture session.")
 
 (define-minor-mode md-capture-mode
@@ -47,7 +47,7 @@
                    (t (user-error "No md-capture targets or directory defined."))))
          (target (completing-read "Capture to: " targets nil t))
          (title (read-string "Post title: "))
-         (date (format-time-string "%Y-%m-%d"))
+         (date (format-time-string "%Y-%m-%d %a %H:%M"))
          (entry-header (format "\n\n## [%s] %s\n\n" date title))
          (capture-buffer (generate-new-buffer "*md-capture*")))
     (split-window-below -12)
@@ -56,13 +56,13 @@
     (insert entry-header)
     (markdown-mode)
     (md-capture-mode 1)
-    (setq-local md-capture--destination target)
+    (setq md-capture--destination target)
     (message "Write your post. C-c C-c to save, C-c C-k to cancel.")))
 
 (defun md-capture-finalize ()
   "Save the capture buffer's contents to the target file."
   (interactive)
-  (let ((content (buffer-string))
+  (let ((content (string-trim-right (buffer-string)))
         (dest md-capture--destination))
     (with-current-buffer (find-file-noselect dest)
       (goto-char (point-min))
@@ -71,9 +71,19 @@
         (insert (format "# %s\n\n" (file-name-base dest))))
       (goto-char (point-min))
       (if (re-search-forward "^## " nil t)
-          (beginning-of-line)
-        (goto-char (point-max)))
-      (insert content "\n")
+          (progn
+            (beginning-of-line)
+            (message "Inserting above first ## at position %d" (point))
+            ;; Clean blank lines above
+            (while (and (not (bobp))
+                        (save-excursion (forward-line -1) (looking-at "^\\s-*$")))
+              (forward-line -1)
+              (delete-blank-lines))
+            (insert "\n")
+            (insert content "\n\n"))
+        (goto-char (point-max))
+        (message "No ## found; appending to end at position %d" (point))
+        (insert "\n" content "\n\n"))
       (save-buffer))
     (md-capture--cleanup)
     (message "Capture saved to %s." md-capture--destination)))
