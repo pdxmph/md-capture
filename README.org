@@ -1,7 +1,6 @@
-#+TITLE: md-capture
-
 * md-capture 📝
-A lightweight Markdown capture system for Emacs. Inspired by Org Capture, but built for plain Markdown.
+
+Quickly capture log entries in Markdown files and get on with your day. No need for a framework or paradigm or whatever. Just put things in a file and use whatever you want to search, view, edit, etc. 
 
 * Features
 - Timestamped level-2 headings like `## [2025-04-21] Title`
