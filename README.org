@@ -1,0 +1,37 @@
+#+TITLE: md-capture
+
+* md-capture 📝
+A lightweight Markdown capture system for Emacs. Inspired by Org Capture, but built for plain Markdown.
+
+* Features
+- Timestamped level-2 headings like `## [2025-04-21] Title`
+- Ensures single top-level heading at file top
+- Prepend-based capture
+- Optional transient capture buffer (split window)
+- Abort with `C-c C-k`, save with `C-c C-c`
+
+* Install
+
+Clone this repo and add to your `config.el`:
+
+#+begin_src emacs-lisp
+(use-package md-capture
+  :load-path \"~/path/to/md-capture\"
+  :commands (md-capture)
+  :init
+  (setq md-capture-dir \"~/writing/\"))
+#+end_src
+
+Or define explicit targets:
+
+#+begin_src emacs-lisp
+(setq md-capture-targets '(\"~/writing/blog.md\" \"~/writing/notes.md\"))
+#+end_src
+
+* Usage
+
+Run =M-x md-capture= or bind to a key.
+
+* License
+
+MIT
