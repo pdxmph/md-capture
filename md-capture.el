@@ -1,7 +1,7 @@
 ;;; md-capture.el --- Simple Markdown capture system -*- lexical-binding: t; -*-
 
 ;; Author: Mike
-;; Version: 0.4
+;; Version: 0.5
 ;; Package-Requires: ((emacs "27.1"))
 ;; Keywords: markdown, convenience, capture
 ;; URL: https://github.com/pdxmph/md-capture
